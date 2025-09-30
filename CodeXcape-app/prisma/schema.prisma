@@ -1,0 +1,416 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgres://46e883109a43a4ea015d6b8a1baa5f1224f0cde033dabb6481b0a7e768154927:sk_SNDz_yH8tuO6eUeYJD7zr@db.prisma.io:5432/postgres?sslmode=require"
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  name              String?
+  password          String?
+  avatar            String?
+  bio               String?
+  writingStyle      String?  // JSON string of writing style analysis
+  preferences       String?  // JSON string of user preferences
+  subscriptionTier  String   @default("FREE") // FREE, PRO, PREMIUM
+  onboardingCompleted Boolean @default(false)
+  writingExperience String?  // BEGINNER, INTERMEDIATE, ADVANCED, PROFESSIONAL
+  favoriteGenres    String?  // JSON string of preferred genres
+  writingGoals      String?  // JSON string of writing goals
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  stories           Story[]
+  writingSessions   WritingSession[]
+  aiGenerations     AIGeneration[]
+  comments          Comment[]
+  likes             Like[]
+  storyIdeas        StoryIdea[]
+  savedCharacters   SavedCharacter[]
+  savedPlots        SavedPlot[]
+  savedDialogues    SavedDialogue[]
+  voiceProfiles     VoiceProfile[]
+  chatSessions      ChatSession[]
+  worlds            World[]
+  onboardingData    UserOnboardingData[]
+  aiSuggestions     AISuggestion[]
+  worldDevelopments WorldDevelopment[]
+}
+
+model Story {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  genre           String
+  status          String   @default("DRAFT") // DRAFT, IN_PROGRESS, COMPLETED, PUBLISHED, ARCHIVED
+  isPublic        Boolean  @default(false)
+  wordCount       Int      @default(0)
+  targetWordCount Int?
+  coverImage      String?
+  tags            String?  // JSON string of tags array
+  metadata        String?  // JSON string for additional metadata
+  
+  // Relations
+  authorId        String
+  author          User     @relation(fields: [authorId], references: [id])
+  chapters        Chapter[]
+  characters      Character[]
+  plots           Plot[]
+  dialogues       Dialogue[]
+  sessions        WritingSession[]
+  generations     AIGeneration[]
+  comments        Comment[]
+  likes           Like[]
+  aiSuggestions   AISuggestion[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Chapter {
+  id          String   @id @default(cuid())
+  title       String
+  content     String?
+  wordCount   Int      @default(0)
+  order       Int
+  isPublished Boolean  @default(false)
+  
+  // Relations
+  storyId     String
+  story       Story    @relation(fields: [storyId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Character {
+  id          String   @id @default(cuid())
+  name        String
+  role        String?  // Protagonist, Antagonist, Supporting, etc.
+  age         Int?
+  description String?
+  personality String?  // JSON string of personality traits
+  backstory   String?
+  appearance  String?  // JSON string of appearance details
+  relationships String? // JSON string of relationships
+  
+  // Relations
+  storyId     String
+  story       Story    @relation(fields: [storyId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Plot {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  content     String?
+  type        String   // IDEA, OUTLINE, SCENE, TWIST, CONFLICT, RESOLUTION
+  order       Int?
+  
+  // Relations
+  storyId     String
+  story       Story    @relation(fields: [storyId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Dialogue {
+  id          String   @id @default(cuid())
+  content     String
+  character1  String
+  character2  String
+  context     String?
+  tone        String?
+  
+  // Relations
+  storyId     String
+  story       Story    @relation(fields: [storyId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WritingSession {
+  id          String   @id @default(cuid())
+  title       String?
+  content     String?
+  wordCount   Int      @default(0)
+  duration    Int?     // in minutes
+  type        String   // BRAINSTORMING, WRITING, EDITING, PLANNING, RESEARCH
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  storyId     String?
+  story       Story?   @relation(fields: [storyId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AIGeneration {
+  id              String   @id @default(cuid())
+  type            String   // STORY_IDEA, PLOT_DEVELOPMENT, DIALOGUE, CHARACTER_DEVELOPMENT, SCENE_DESCRIPTION, WORLD_BUILDING, STYLE_ADAPTATION
+  prompt          String
+  generatedContent String
+  model           String   // gpt-3.5-turbo, gpt-4, etc.
+  parameters      String?  // JSON string of generation parameters
+  quality         String?  // JSON string of quality metrics
+  
+  // Relations
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  storyId         String?
+  story           Story?   @relation(fields: [storyId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  isPublic    Boolean  @default(true)
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  storyId     String
+  story       Story    @relation(fields: [storyId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Like {
+  id          String   @id @default(cuid())
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  storyId     String
+  story       Story    @relation(fields: [storyId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([userId, storyId])
+}
+
+// New models for saving generated content
+model StoryIdea {
+  id          String   @id @default(cuid())
+  title       String
+  concept     String
+  genre       String
+  themes      String?  // JSON string of themes array
+  characters  String?  // JSON string of characters array
+  conflict    String?
+  setting     String?
+  potential   String   @default("medium") // high, medium, low
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SavedCharacter {
+  id            String   @id @default(cuid())
+  name          String
+  role          String
+  age           Int?
+  description   String
+  personality   String?  // JSON string of personality traits
+  backstory     String?
+  motivation    String?
+  appearance    String?
+  skills        String?  // JSON string of skills array
+  flaws         String?  // JSON string of flaws array
+  relationships String?  // JSON string of relationships array
+  
+  // Relations
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SavedPlot {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  plotPoints  String   // JSON string of plot points array
+  genre       String?
+  theme       String?
+  structure   String?
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SavedDialogue {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  characters  String   // JSON string of characters array
+  setting     String?
+  mood        String?
+  genre       String?
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model VoiceProfile {
+  id                String   @id @default(cuid())
+  name              String
+  tone              String?
+  pace              String?
+  vocabulary        String?
+  sentenceStructure String?
+  strengths         String?  // JSON string of strengths array
+  improvements      String?  // JSON string of improvements array
+  sample            String
+  
+  // Relations
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  title     String
+  messages  String   // JSON string of messages array
+  
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// New models for enhanced features
+
+model UserOnboardingData {
+  id              String   @id @default(cuid())
+  question        String
+  answer          String
+  questionType    String   // SURVEY, FILE_UPLOAD, PREFERENCE
+  metadata        String?  // JSON string for additional data
+  
+  // Relations
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model World {
+  id              String   @id @default(cuid())
+  name            String
+  description     String
+  genre           String
+  setting         String
+  timePeriod      String?
+  magicSystem     String?
+  technologyLevel String?
+  politicalSystem String?
+  culture         String?
+  geography       String?
+  history         String?
+  rules           String?  // JSON string of world rules
+  characters      String?  // JSON string of sample characters
+  
+  // Relations
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  embeddings      WorldEmbedding[]
+  developments    WorldDevelopment[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model WorldEmbedding {
+  id              String   @id @default(cuid())
+  worldId         String
+  content         String
+  embedding       String   // JSON string of embedding vector
+  type            String   // overview, character, location, culture, history, magic, politics, technology
+  section         String
+  subsection      String?
+  importance      Float    @default(0.5)
+  
+  // Relations
+  world           World    @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model WorldDevelopment {
+  id              String   @id @default(cuid())
+  worldId         String
+  query           String
+  developmentType String   // character, location, culture, history, magic, politics, general
+  content         String
+  context         String?  // Retrieved context used for generation
+  suggestions     String?  // JSON string of suggestions
+  userId          String
+  
+  // Relations
+  world           World    @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AISuggestion {
+  id              String   @id @default(cuid())
+  type            String   // WRITING_TIP, CHARACTER_SUGGESTION, PLOT_DEVELOPMENT, WORLD_BUILDING, STYLE_IMPROVEMENT
+  title           String
+  content         String
+  context         String?  // Context that triggered the suggestion
+  isRead          Boolean  @default(false)
+  isDismissed     Boolean  @default(false)
+  priority        String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  metadata        String?  // JSON string for additional data
+  
+  // Relations
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  storyId         String?
+  story           Story?   @relation(fields: [storyId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
