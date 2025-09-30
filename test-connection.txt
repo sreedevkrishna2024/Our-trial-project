@@ -1,0 +1,10 @@
+# Test Connection File
+
+This is a test file to verify Git connection with GitHub.
+
+**Repository:** CodeXcape-app
+**Username:** sreedevkrishna2024
+**Email:** sreedev.krishna2024@vitstudent.ac.in
+**Date:** $(Get-Date)
+
+This file was created to test the Git push functionality.
